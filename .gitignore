@@ -58,3 +58,5 @@ cmake_install.cmake
 samples/bench
 samples/parsing_fasta
 samples/sequences_example
+.cache/
+compile_commands.json

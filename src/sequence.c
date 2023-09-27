@@ -2,6 +2,7 @@
 // Created by sachetto on 31/03/2022.
 //
 
+#include <bits/stdint-intn.h>
 #define _GNU_SOURCE
 
 #include "sequence.h"
@@ -88,6 +89,7 @@ bioc_seq *bioc_complement(bioc_seq *s) {
 
     bioc_seq *comp = seq(NULL);
     size_t s_len = s->len;
+    comp->len = s_len;
 
     arrsetlen(comp->nucleotides, s_len + 1);
     comp->nucleotides[s_len] = 0;
@@ -95,6 +97,7 @@ bioc_seq *bioc_complement(bioc_seq *s) {
     for(size_t i = 0; i < s_len; i++) {
         comp->nucleotides[i] = nucleotide_complement(s->nucleotides[i]);
     }
+
 
     return comp;
 }
@@ -107,6 +110,7 @@ bioc_seq *bioc_reverse(bioc_seq *s) {
 
     bioc_seq *rev = seq(NULL);
     int s_len = (int)s->len;
+    rev->len = s_len;
 
     arrsetlen(rev->nucleotides, s_len + 1);
     rev->nucleotides[s_len] = 0;
@@ -126,6 +130,7 @@ bioc_seq *bioc_reverse_complement(bioc_seq *s) {
 
     bioc_seq *rev = seq(NULL);
     int64_t s_len = (int)s->len;
+    rev->len = s_len;
 
     arrsetlen(rev->nucleotides, s_len + 1);
     rev->nucleotides[s_len] = 0;
@@ -135,6 +140,65 @@ bioc_seq *bioc_reverse_complement(bioc_seq *s) {
     }
 
     return rev;
+}
+
+bioc_seq *bioc_transcribe(bioc_seq *s) {
+
+    if(s == NULL) {
+        return NULL;
+    }
+
+    //TODO: this is a common pattern, make a function or a macro
+    bioc_seq *trans = seq(NULL);
+    int64_t s_len = (int)s->len;
+    trans->len = s_len;
+
+    arrsetlen(trans->nucleotides, s_len + 1);
+    trans->nucleotides[s_len] = 0;
+
+    for(int64_t i = 0; i < s_len; i++) {
+        switch (s->nucleotides[i]) {
+            case 'T':
+                trans->nucleotides[i] = 'U';
+                break;
+            case 't':
+                trans->nucleotides[i] = 'u';
+                break;
+           default:
+                trans->nucleotides[i] = s->nucleotides[i];
+        }
+    }
+
+    return trans;
+}
+
+bioc_seq *bioc_back_transcribe(bioc_seq *s) {
+
+    if(s == NULL) {
+        return NULL;
+    }
+    //TODO: this is a common pattern, make a function or a macro
+    bioc_seq *trans = seq(NULL);
+    int64_t s_len = (int)s->len;
+    trans->len = s_len - 1;
+
+    arrsetlen(trans->nucleotides, s_len + 1);
+    trans->nucleotides[s_len] = 0;
+
+    for(int64_t i = 0; i < s_len; i++) {
+        switch (s->nucleotides[i]) {
+            case 'U':
+                trans->nucleotides[i] = 'T';
+                break;
+            case 'u':
+                trans->nucleotides[i] = 't';
+                break;
+           default:
+                trans->nucleotides[i] = s->nucleotides[i];
+        }
+    }
+
+    return trans;
 }
 
 uint64_t bioc_count_nucleotide(bioc_seq *seq, char nucleotide) {
@@ -160,7 +224,8 @@ void bioc_add_nucleotide(bioc_seq *seq, char nucleotide) {
     seq->len++;
 }
 
-int64_t bioc_find(bioc_seq *seq, char *sub, int64_t start, int64_t end) {
+
+int64_t bioc_find_with_bounds(bioc_seq *seq, char *sub, int64_t start, int64_t end) {
     //TODO: check bounds
     if(end > seq->len) end = seq->len; //TODO: warning??
 
@@ -182,3 +247,55 @@ int64_t bioc_find(bioc_seq *seq, char *sub, int64_t start, int64_t end) {
 
 }
 
+
+int64_t bioc_find(bioc_seq *seq, char *sub) {
+    return bioc_find_with_bounds(seq, sub, 0, seq->len);
+}
+
+static int64_t bioc_count_common(bioc_seq *seq, char *sub, int64_t start, int64_t end, bool overlap) {
+    //TODO: check bounds
+    if(end > seq->len) end = seq->len; //TODO: warning??
+
+    char *tmp = seq->nucleotides + start;
+
+    char *find = strstr(tmp, sub);
+
+    int64_t count = 0;
+    size_t n_sub = 1;
+
+    if(!overlap) n_sub = strlen(sub);
+
+    while(find != NULL) {
+        count++;
+        find = strstr(find + n_sub, sub);
+        int64_t index = (long) (find - seq->nucleotides);
+
+        if(index > end) {
+            return -1;
+        }
+    }
+
+    return count;
+}
+
+int64_t bioc_count(bioc_seq *seq, char *sub) {
+    return  bioc_count_common(seq, sub, 0, seq->len, false);
+}
+
+int64_t bioc_count_overlap(bioc_seq *seq, char *sub) {
+    return  bioc_count_common(seq, sub, 0, seq->len, true);
+}
+
+int64_t bioc_count_with_bounds(bioc_seq *seq, char *sub, int64_t start, int64_t end) {
+    return  bioc_count_common(seq, sub, start, end, false);
+}
+
+int64_t bioc_count_with_bounds_overlap(bioc_seq *seq, char *sub, int64_t start, int64_t end) {
+    return  bioc_count_common(seq, sub, start, end, true);
+}
+
+void bioc_seq_free(bioc_seq *seq) {
+    arrfree(seq->nucleotides);
+    free(seq);
+    seq = NULL;
+}
