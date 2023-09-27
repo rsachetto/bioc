@@ -1,0 +1,10 @@
+;LCBO - Prolactin precursor - Bovine
+; a sample sequence in FASTA format
+>sequence A
+ggtaagtcctctagtacaaacacccccaatattgtgatataattaaaattatattcatat
+tctgttgccagaaaaaacacttttaggctatattagagccatcttctttgaagcgttgtc
+
+>sequence B
+ggtaagtgctctagtacaaacacccccaatattgtgatataattaaaattatattcatat
+tctgttgccagattttacacttttaggctatattagagccatcttctttgaagcgttgtc
+tatgcatcgatcgacgactg
