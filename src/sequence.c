@@ -26,18 +26,17 @@ inline static char nucleotide_complement(char n) {
         case 'g': return 'c';
         case 'C': return 'G';
         case 'c': return 'g';
+        default : return 'U';
     }
-
-    return 'U';
 }
 
-int print_sequence(FILE *stream, const struct printf_info *info,  const void *const *args) {
-    const sequence *s;
+static int bioc_print_sequence(FILE *stream, const struct printf_info *info,  const void *const *args) {
+    const bioc_seq *s;
     char *buffer;
     int len;
 
     /* Format the output into a string. */
-    s = *((const sequence **) (args[0]));
+    s = *((const bioc_seq **) (args[0]));
     len = asprintf (&buffer, "%s", s->nucleotides);
 
     if (len == -1)
@@ -58,15 +57,15 @@ int print_widget_arginfo (const struct printf_info *info, size_t n, int *argtype
     return 1;
 }
 
-sequence * seq(char *nucleotides) {
+bioc_seq * seq(char *nucleotides) {
     static bool registred = false;
     if(!registred) {
         //TODO: maybe this is not the place for this initialization.
-        register_printf_specifier('Q', print_sequence, print_widget_arginfo);
+        register_printf_specifier('Q', bioc_print_sequence, print_widget_arginfo);
         registred = true;
     }
 
-    sequence *new_seq = (sequence *) calloc(1, sizeof(sequence));
+    bioc_seq *new_seq = (bioc_seq *) calloc(1, sizeof(bioc_seq));
 
     if(nucleotides == NULL || nucleotides[0] == '\0') {
         return new_seq;
@@ -82,12 +81,12 @@ sequence * seq(char *nucleotides) {
     return new_seq;
 }
 
-sequence * complement(sequence *s) {
+bioc_seq *bioc_complement(bioc_seq *s) {
     if(s == NULL) {
         return NULL;
     }
 
-    sequence *comp = seq(NULL);
+    bioc_seq *comp = seq(NULL);
     size_t s_len = s->len;
 
     arrsetlen(comp->nucleotides, s_len + 1);
@@ -100,13 +99,13 @@ sequence * complement(sequence *s) {
     return comp;
 }
 
-sequence * reverse(sequence *s) {
+bioc_seq *bioc_reverse(bioc_seq *s) {
 
     if(s == NULL) {
         return NULL;
     }
 
-    sequence *rev = seq(NULL);
+    bioc_seq *rev = seq(NULL);
     int s_len = (int)s->len;
 
     arrsetlen(rev->nucleotides, s_len + 1);
@@ -119,13 +118,13 @@ sequence * reverse(sequence *s) {
     return rev;
 }
 
-sequence * reverse_complement(sequence *s) {
+bioc_seq *bioc_reverse_complement(bioc_seq *s) {
 
     if(s == NULL) {
         return NULL;
     }
 
-    sequence *rev = seq(NULL);
+    bioc_seq *rev = seq(NULL);
     int s_len = (int)s->len;
 
     arrsetlen(rev->nucleotides, s_len + 1);
@@ -138,7 +137,7 @@ sequence * reverse_complement(sequence *s) {
     return rev;
 }
 
-uint64_t count_nucleotide(sequence *seq, char nucleotide) {
+uint64_t bioc_count_nucleotide(bioc_seq *seq, char nucleotide) {
     int n = seq->len;
     uint64_t count = 0;
     //TODO: omp?
@@ -152,11 +151,11 @@ uint64_t count_nucleotide(sequence *seq, char nucleotide) {
 }
 
 //TODO: macro maybe?
-double GC_content(sequence *seq) {
-    return 100.0 * (double)(count_nucleotide(seq, 'G') + count_nucleotide(seq, 'C') + count_nucleotide(seq, 'g') + count_nucleotide(seq, 'c'))/seq->len;
+double bioc_GC_content(bioc_seq *seq) {
+    return 100.0 * (double)(bioc_count_nucleotide(seq, 'G') + bioc_count_nucleotide(seq, 'C') + bioc_count_nucleotide(seq, 'g') + bioc_count_nucleotide(seq, 'c'))/seq->len;
 }
 
-void add_nucleotide(sequence *seq, char nucleotide) {
+void bioc_add_nucleotide(bioc_seq *seq, char nucleotide) {
     arrput(seq->nucleotides, nucleotide);
     seq->len++;
 }

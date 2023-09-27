@@ -10,10 +10,10 @@
 #include <stdio.h>
 #include <ctype.h>
 
-sequence_record new_sequence_record() {
-    sequence_record s;
+bioc_sequence_record new_sequence_record() {
+    bioc_sequence_record s;
     s.seq = seq("");
-    s.seq = calloc(1, sizeof(sequence));
+    s.seq = calloc(1, sizeof(bioc_seq));
     s.indexes = ht_create();
     return s;
 }
@@ -22,9 +22,9 @@ sequence_record new_sequence_record() {
     if (!*(content)) break;   \
     (content)++;
 
-static sequence_record_list parse_fasta_file(char *content, size_t size) {
+static bioc_sequence_record_list parse_fasta_file(char *content, size_t size) {
 
-    sequence_record_list seqs = NULL;
+    bioc_sequence_record_list seqs = NULL;
 
     while (*content) {
 
@@ -36,7 +36,7 @@ static sequence_record_list parse_fasta_file(char *content, size_t size) {
 
             ADD_OR_BREAK(content);
             
-            sequence_record s = new_sequence_record();
+            bioc_sequence_record s = new_sequence_record();
 
             int c = 0;
 
@@ -53,7 +53,7 @@ static sequence_record_list parse_fasta_file(char *content, size_t size) {
             while (*content != '>') {
                 if(*content != '\n' && !isspace(*content)) {
                     //TODO: check for error
-                    add_nucleotide(s.seq, *content);
+                    bioc_add_nucleotide(s.seq, *content);
                 }
                 ADD_OR_BREAK(content);
             }
@@ -65,9 +65,9 @@ static sequence_record_list parse_fasta_file(char *content, size_t size) {
     return seqs;
 }
 
-static sequence_record_list parse_fastq_file(char *content, size_t size) {
+static bioc_sequence_record_list parse_fastq_file(char *content, size_t size) {
 
-    sequence_record_list seqs = NULL;
+    bioc_sequence_record_list seqs = NULL;
 
     while (*content) {
  
@@ -79,7 +79,7 @@ static sequence_record_list parse_fastq_file(char *content, size_t size) {
 
             ADD_OR_BREAK(content);
             
-            sequence_record s = new_sequence_record();
+            bioc_sequence_record s = new_sequence_record();
 
             int c = 0;
 
@@ -96,7 +96,7 @@ static sequence_record_list parse_fastq_file(char *content, size_t size) {
             while (*content != '+') {
                 if(*content != '\n' && !isspace(*content)) {
                     //TODO: check for error
-                    add_nucleotide(s.seq, *content);
+                    bioc_add_nucleotide(s.seq, *content);
                 }
                 ADD_OR_BREAK(content);
             }
@@ -111,7 +111,7 @@ static sequence_record_list parse_fastq_file(char *content, size_t size) {
 
     return seqs;
 }
-sequence_record_list parse_sequence_file(char *sequence_file_path, enum sequence_file_format sequence_file_f) {
+bioc_sequence_record_list bioc_parse_sequence_file(char *sequence_file_path, enum bioc_sequence_file_format sequence_file_f) {
 
     size_t sequence_file_size = 0;
 
@@ -122,7 +122,7 @@ sequence_record_list parse_sequence_file(char *sequence_file_path, enum sequence
         return NULL;
     }
 
-    sequence_record_list l = NULL;
+    bioc_sequence_record_list l = NULL;
 
     switch (sequence_file_f) {
         case FASTA:

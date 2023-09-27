@@ -8,17 +8,17 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-typedef struct seq {
+typedef struct bioc_seq_t {
     char *nucleotides;
     size_t len;
     //TODO: more
-} sequence;
+} bioc_seq;
 
-sequence * seq(char *nucleotides);
-sequence * complement(sequence *s);
-sequence * reverse(sequence *s);
-sequence * reverse_complement(sequence *s);
-void add_nucleotide(sequence *seq, char nucleotide);
-uint64_t count_nucleotide(sequence *seq, char nucleotide);
-double GC_content(sequence *seq);
+bioc_seq * seq(char *nucleotides);
+bioc_seq * bioc_complement(bioc_seq *s);
+bioc_seq * bioc_reverse(bioc_seq *s);
+bioc_seq * bioc_reverse_complement(bioc_seq *s);
+void       bioc_add_nucleotide(bioc_seq *seq, char nucleotide);
+uint64_t   bioc_count_nucleotide(bioc_seq *seq, char nucleotide);
+double     bioc_GC_content(bioc_seq *seq);
 #endif//BIOC_SEQUENCE_H
