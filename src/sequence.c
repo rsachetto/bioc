@@ -71,7 +71,7 @@ bioc_seq * seq(char *nucleotides) {
         return new_seq;
     }
 
-    size_t n_len = strlen(nucleotides) + 1;
+    int64_t n_len = (int64_t) strlen(nucleotides) + 1;
 
     arrsetlen(new_seq->nucleotides, n_len);
 
@@ -125,12 +125,12 @@ bioc_seq *bioc_reverse_complement(bioc_seq *s) {
     }
 
     bioc_seq *rev = seq(NULL);
-    int s_len = (int)s->len;
+    int64_t s_len = (int)s->len;
 
     arrsetlen(rev->nucleotides, s_len + 1);
     rev->nucleotides[s_len] = 0;
 
-    for(int i = s_len-1; i >= 0; i--) {
+    for(int64_t i = s_len-1; i >= 0; i--) {
         rev->nucleotides[s_len - 1 - i] = nucleotide_complement(s->nucleotides[i]);
     }
 
@@ -138,10 +138,10 @@ bioc_seq *bioc_reverse_complement(bioc_seq *s) {
 }
 
 uint64_t bioc_count_nucleotide(bioc_seq *seq, char nucleotide) {
-    int n = seq->len;
+    int64_t n = seq->len;
     uint64_t count = 0;
     //TODO: omp?
-    for(int i = 0; i < n; i++) {
+    for(int64_t i = 0; i < n; i++) {
         if(seq->nucleotides[i] == nucleotide) {
             count++;
         }
@@ -152,11 +152,33 @@ uint64_t bioc_count_nucleotide(bioc_seq *seq, char nucleotide) {
 
 //TODO: macro maybe?
 double bioc_GC_content(bioc_seq *seq) {
-    return 100.0 * (double)(bioc_count_nucleotide(seq, 'G') + bioc_count_nucleotide(seq, 'C') + bioc_count_nucleotide(seq, 'g') + bioc_count_nucleotide(seq, 'c'))/seq->len;
+    return 100.0 * (double)(bioc_count_nucleotide(seq, 'G') + bioc_count_nucleotide(seq, 'C') + bioc_count_nucleotide(seq, 'g') + bioc_count_nucleotide(seq, 'c'))/(double)seq->len;
 }
 
 void bioc_add_nucleotide(bioc_seq *seq, char nucleotide) {
     arrput(seq->nucleotides, nucleotide);
     seq->len++;
+}
+
+int64_t bioc_find(bioc_seq *seq, char *sub, int64_t start, int64_t end) {
+    //TODO: check bounds
+    if(end > seq->len) end = seq->len; //TODO: warning??
+
+    char *tmp = seq->nucleotides + start;
+
+    char *find = strstr(tmp, sub);
+
+    if(find == NULL) {
+        return -1;
+    }
+
+    int64_t index = (long) (find - seq->nucleotides);
+
+    if(index > end) {
+        return -1;
+    }
+
+    return index;
+
 }
 
