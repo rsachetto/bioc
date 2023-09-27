@@ -1,2 +1,2 @@
 # bioc
-Biopyhon clone in C - **Higly incomplete and experimental. APi will change!!**
+Biopyhon clone in C - **Higly incomplete and experimental. API will change!!**
