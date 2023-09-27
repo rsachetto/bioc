@@ -29,6 +29,20 @@ int main() {
 
     bioc_seq *s2 = seq("GUCAUGGCCAUUGUAAUGGGCCGCUGAAAGGGUGCCCGAUAGUUG");
     printf("find AUG: %ld\n", bioc_find(s2, "AUG"));
+    printf("%Q starts_with GUC: %s\n", s2, bioc_seq_starts_with(s2, "GUC") ? "Yes": "No");
+    printf("%Q starts_with AUG: %s\n", s2, bioc_seq_starts_with(s2, "AUG") ? "Yes": "No");
+    printf("%Q starts_with AUG: %s\n", s2, bioc_seq_starts_with_bounded(s2, "AUG", 3, s2->len) ? "Yes": "No");
+
+
+    printf("%Q ends_with UUG: %s\n", s2, bioc_seq_ends_with(s2, "UUG") ? "Yes": "No");
+    printf("%Q ends_with AUG: %s\n", s2, bioc_seq_ends_with(s2, "AUG") ? "Yes": "No");
+    printf("%.*s ends_with AUG: %s\n", 18, s2->nucleotides, bioc_seq_ends_with_bounded(s2, "AUG", 0, 18) ? "Yes": "No");
+
+
+    //TODO:
+    //add a function to work on a list:
+    //my_rna.startswith(("UCC", "UCA", "UCG"), 1)
+    // True
 
     bioc_seq *s3 =  seq("AGTACACTGGT");
     printf("find ACT: %ld\n", bioc_find(s3, "ACT"));

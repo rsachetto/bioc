@@ -5,9 +5,9 @@
 #include <bits/stdint-intn.h>
 #define _GNU_SOURCE
 
-#include "sequence.h"
-#include <string.h>
+#include "bioc_sequence.h"
 #include <printf.h>
+#include <string.h>
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -286,12 +286,43 @@ int64_t bioc_count_overlap(bioc_seq *seq, char *sub) {
     return  bioc_count_common(seq, sub, 0, seq->len, true);
 }
 
-int64_t bioc_count_with_bounds(bioc_seq *seq, char *sub, int64_t start, int64_t end) {
+int64_t bioc_count_bounded(bioc_seq *seq, char *sub, int64_t start, int64_t end) {
     return  bioc_count_common(seq, sub, start, end, false);
 }
 
-int64_t bioc_count_with_bounds_overlap(bioc_seq *seq, char *sub, int64_t start, int64_t end) {
+int64_t bioc_count_with_overlap_bounded(bioc_seq *seq, char *sub, int64_t start, int64_t end) {
     return  bioc_count_common(seq, sub, start, end, true);
+}
+
+bool bioc_seq_starts_with_bounded(bioc_seq *seq, const char *prefix, int64_t start, int64_t end) {
+    //TODO: check bound properly
+    int64_t s = (int64_t) strlen(seq->nucleotides + start);
+
+    if(seq->nucleotides + start + s > seq->nucleotides + end) {
+        //TODO: check
+        return false;
+    }
+    return strncmp(prefix, seq->nucleotides + start, strlen(prefix)) == 0;
+}
+
+bool bioc_seq_starts_with(bioc_seq *seq, const char *prefix) {
+    return bioc_seq_starts_with_bounded(seq, prefix, 0, seq->len);
+}
+
+bool bioc_seq_ends_with_bounded(bioc_seq *seq, char* suffix, int64_t start, int64_t end) {
+    //TODO: check bound properly
+    int64_t seq_l = seq->len;
+    int64_t suffix_l = (int64_t)strlen(suffix);
+
+    if (seq_l < suffix_l) {
+        return false;
+    }
+
+    return strncmp(seq->nucleotides + start + (end - suffix_l), suffix, suffix_l) == 0;
+}
+
+bool bioc_seq_ends_with(bioc_seq *seq, char* suffix) {
+    return bioc_seq_ends_with_bounded(seq, suffix, 0, seq->len);
 }
 
 void bioc_seq_free(bioc_seq *seq) {

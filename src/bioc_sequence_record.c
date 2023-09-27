@@ -2,13 +2,13 @@
 // Created by sachetto on 31/03/2022.
 //
 
-#include "sequence_record.h"
+#include "bioc_sequence_record.h"
 #include "3d_party/stb/stb_ds.h"
+#include "bioc_parsing_utils.h"
+#include "bioc_sequence.h"
 #include "file_utils/file_utils.h"
-#include "parsing_utils.h"
-#include "sequence.h"
-#include <stdio.h>
 #include <ctype.h>
+#include <stdio.h>
 
 bioc_sequence_record new_sequence_record() {
     bioc_sequence_record s;

@@ -60,3 +60,7 @@ samples/parsing_fasta
 samples/sequences_example
 .cache/
 compile_commands.json
+
+.idea/
+cmake-build-debug/
+cmake-build-release/
