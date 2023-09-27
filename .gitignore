@@ -55,3 +55,6 @@ CMakeCache.txt
 CMakeFiles/
 Makefile
 cmake_install.cmake
+samples/bench
+samples/parsing_fasta
+samples/sequences_example
