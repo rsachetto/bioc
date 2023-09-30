@@ -12,9 +12,8 @@
 
 bioc_sequence_record new_sequence_record() {
     bioc_sequence_record s;
-    s.seq = seq("");
-    s.seq = calloc(1, sizeof(bioc_seq));
-    s.indexes = ht_create();
+    s.seq = seq(NULL);
+    s.indexes = ht_create(); //Why??
     return s;
 }
 

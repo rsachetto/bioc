@@ -63,9 +63,34 @@ int main() {
     bioc_seq_free(tmp2);
     bioc_seq_free(tmp);
 
+    bioc_seq *s5 = seq("ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG");
+    tmp = bioc_translate(s5, BIOC_STANDART, false);
+    printf("Translation: %Q\n", tmp);
+    bioc_seq_free(tmp);
+
+    tmp = bioc_translate(s5, BIOC_STANDART, true);
+    printf("Translation: %Q\n", tmp);
+    bioc_seq_free(tmp);
+
+    tmp = bioc_translate(s5, BIOC_VERTEBRATE_MITOCHONDRIAL, false);
+    printf("Translation vertebrate: %Q\n", tmp);
+    bioc_seq_free(tmp);
+
+    tmp = bioc_translate(s5, BIOC_VERTEBRATE_MITOCHONDRIAL, true);
+    printf("Translation vertebrate stop codon: %Q\n", tmp);
+    bioc_seq_free(tmp);
+
+    bioc_seq *s6 = seq("ACGT");
+    bioc_seq  *s7 = seq("AACCGG");
+    tmp = bioc_concatenate(s6, s7);
+    printf("Concat: %Q\n", tmp);
+    bioc_seq_free(tmp);
 
     bioc_seq_free(s);
     bioc_seq_free(s2);
     bioc_seq_free(s3);
     bioc_seq_free(s4);
+    bioc_seq_free(s5);
+    bioc_seq_free(s6);
+    bioc_seq_free(s7);
 }

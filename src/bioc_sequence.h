@@ -15,12 +15,22 @@ typedef struct bioc_seq_t {
     //TODO: more
 } bioc_seq;
 
+typedef enum bioc_genetic_code_enum {
+    BIOC_STANDART,
+    BIOC_VERTEBRATE_MITOCHONDRIAL,
+    BIOC_INVERTEBRATE_MITOCHONDRIAL,
+} bioc_genetic_code;
+
+
 bioc_seq * seq(char *nucleotides);
+bioc_seq * empty_seq_with_len(int64_t len);
 bioc_seq * bioc_complement(bioc_seq *s);
 bioc_seq * bioc_reverse(bioc_seq *s);
 bioc_seq * bioc_reverse_complement(bioc_seq *s);
 bioc_seq * bioc_transcribe(bioc_seq *s);
 bioc_seq * bioc_back_transcribe(bioc_seq *s);
+bioc_seq * bioc_translate(bioc_seq *s, bioc_genetic_code code, bool to_stop);
+bioc_seq * bioc_concatenate(bioc_seq *s1, bioc_seq *s2);
 int64_t    bioc_find(bioc_seq *seq, char *sub);
 int64_t    bioc_find_with_bounds(bioc_seq *seq, char *sub, int64_t start, int64_t end);
 int64_t    bioc_count(bioc_seq *seq, char *sub);
