@@ -1,6 +1,4 @@
 //
-// Created by sachetto on 31/03/2022.
-//
 
 #include "../src/bioc.h"
 #include <stdio.h>
@@ -22,5 +20,8 @@ int main() {
     FOR_EACH_RECORD(s, seqs_fq) {
         printf("%s\n", s->id);
         printf("%s\n", s->seq->nucleotides);
-    }    
+    }
+
+    bioc_sequence_record_list_free(seqs);
+    bioc_sequence_record_list_free(seqs_fq);
 }

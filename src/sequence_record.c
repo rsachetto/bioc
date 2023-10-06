@@ -12,8 +12,7 @@
 
 bioc_sequence_record new_sequence_record() {
     bioc_sequence_record s;
-    s.seq = seq("");
-    s.seq = calloc(1, sizeof(bioc_seq));
+    s.seq = seq(NULL);
     s.indexes = ht_create();
     return s;
 }
@@ -58,6 +57,7 @@ static bioc_sequence_record_list parse_fasta_file(char *content, size_t size) {
                 ADD_OR_BREAK(content);
             }
 
+            arrput(s.seq->nucleotides, '\0');
             arrput(seqs, s);
         }
     }
@@ -101,9 +101,10 @@ static bioc_sequence_record_list parse_fastq_file(char *content, size_t size) {
                 ADD_OR_BREAK(content);
             }
 
+            arrput(s.seq->nucleotides, '\0');
             arrput(seqs, s);
 
-            while(*content != '@' ) {
+            while(*content && *content != '@' ) {
                 content++;
             }
         }
@@ -141,4 +142,20 @@ bioc_sequence_record_list bioc_parse_sequence_file(char *sequence_file_path, enu
 
     munmap(file_content, sequence_file_size);
     return l;
+}
+
+void bioc_sequence_record_free(bioc_sequence_record *r) {
+    bioc_seq_free(r->seq);
+    ht_destroy(r->indexes);
+}
+
+void bioc_sequence_record_list_free(bioc_sequence_record_list l) {
+
+    bioc_sequence_record *s;
+
+    FOR_EACH_RECORD(s, l) {
+        bioc_sequence_record_free(s);
+    }
+
+    arrfree(l);
 }

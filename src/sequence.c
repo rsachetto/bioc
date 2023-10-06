@@ -297,5 +297,4 @@ int64_t bioc_count_with_bounds_overlap(bioc_seq *seq, char *sub, int64_t start, 
 void bioc_seq_free(bioc_seq *seq) {
     arrfree(seq->nucleotides);
     free(seq);
-    seq = NULL;
 }
