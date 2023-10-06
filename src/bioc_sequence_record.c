@@ -2,18 +2,18 @@
 // Created by sachetto on 31/03/2022.
 //
 
-#include "sequence_record.h"
+#include "bioc_sequence_record.h"
 #include "3d_party/stb/stb_ds.h"
+#include "bioc_parsing_utils.h"
+#include "bioc_sequence.h"
 #include "file_utils/file_utils.h"
-#include "parsing_utils.h"
-#include "sequence.h"
-#include <stdio.h>
 #include <ctype.h>
+#include <stdio.h>
 
 bioc_sequence_record new_sequence_record() {
     bioc_sequence_record s;
     s.seq = seq(NULL);
-    s.indexes = ht_create();
+    s.indexes = ht_create(); //Why??
     return s;
 }
 
@@ -34,7 +34,7 @@ static bioc_sequence_record_list parse_fasta_file(char *content, size_t size) {
         while (*content == '>') {
 
             ADD_OR_BREAK(content);
-            
+
             bioc_sequence_record s = new_sequence_record();
 
             int c = 0;
@@ -70,15 +70,15 @@ static bioc_sequence_record_list parse_fastq_file(char *content, size_t size) {
     bioc_sequence_record_list seqs = NULL;
 
     while (*content) {
- 
+
         while(isspace(*content)) {
             content++;
         }
-        
+
         if (*content == '@') {
 
             ADD_OR_BREAK(content);
-            
+
             bioc_sequence_record s = new_sequence_record();
 
             int c = 0;
@@ -131,10 +131,10 @@ bioc_sequence_record_list bioc_parse_sequence_file(char *sequence_file_path, enu
             break;
         case GENBANK:
             fprintf(stderr, "GenBank format not implemented yet!\n");
-            break;        
+            break;
         case FASTQ_ILLUMINA:
             l = parse_fastq_file(file_content, sequence_file_size);
-            break;         
+            break;
         default:
             fprintf(stderr, "Invalid format!\n");
             break;

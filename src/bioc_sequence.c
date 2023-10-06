@@ -5,15 +5,23 @@
 #include <bits/stdint-intn.h>
 #define _GNU_SOURCE
 
-#include "sequence.h"
-#include <string.h>
+#include "bioc_sequence.h"
 #include <printf.h>
+#include <string.h>
 
 #include <stdio.h>
 #include <stdbool.h>
 
 #define STB_DS_IMPLEMENTATION
+#include "3d_party/hash/ht.h"
 #include "3d_party/stb/stb_ds.h"
+
+typedef struct bioc_translation_table_entry_t {
+    char *key;
+    char value;
+} bioc_translation_table_entry;
+
+static bool registred = false;
 
 inline static char nucleotide_complement(char n) {
     switch (n) {
@@ -59,7 +67,6 @@ int print_widget_arginfo (const struct printf_info *info, size_t n, int *argtype
 }
 
 bioc_seq * seq(char *nucleotides) {
-    static bool registred = false;
     if(!registred) {
         //TODO: maybe this is not the place for this initialization.
         register_printf_specifier('Q', bioc_print_sequence, print_widget_arginfo);
@@ -74,10 +81,27 @@ bioc_seq * seq(char *nucleotides) {
 
     int64_t n_len = (int64_t) strlen(nucleotides) + 1;
 
-    arrsetlen(new_seq->nucleotides, n_len);
+            arrsetlen(new_seq->nucleotides, n_len);
 
     memcpy(new_seq->nucleotides, nucleotides, n_len);
     new_seq->len = n_len - 1;
+
+    return new_seq;
+}
+
+bioc_seq * empty_seq_with_len(int64_t len) {
+
+    if(!registred) {
+        //TODO: maybe this is not the place for this initialization.
+        register_printf_specifier('Q', bioc_print_sequence, print_widget_arginfo);
+        registred = true;
+    }
+
+    bioc_seq *new_seq = (bioc_seq *) calloc(1, sizeof(bioc_seq));
+
+    arrsetlen(new_seq->nucleotides, len + 1);
+
+    new_seq->len = len;
 
     return new_seq;
 }
@@ -164,7 +188,7 @@ bioc_seq *bioc_transcribe(bioc_seq *s) {
             case 't':
                 trans->nucleotides[i] = 'u';
                 break;
-           default:
+            default:
                 trans->nucleotides[i] = s->nucleotides[i];
         }
     }
@@ -193,7 +217,7 @@ bioc_seq *bioc_back_transcribe(bioc_seq *s) {
             case 'u':
                 trans->nucleotides[i] = 't';
                 break;
-           default:
+            default:
                 trans->nucleotides[i] = s->nucleotides[i];
         }
     }
@@ -286,15 +310,200 @@ int64_t bioc_count_overlap(bioc_seq *seq, char *sub) {
     return  bioc_count_common(seq, sub, 0, seq->len, true);
 }
 
-int64_t bioc_count_with_bounds(bioc_seq *seq, char *sub, int64_t start, int64_t end) {
+int64_t bioc_count_bounded(bioc_seq *seq, char *sub, int64_t start, int64_t end) {
     return  bioc_count_common(seq, sub, start, end, false);
 }
 
-int64_t bioc_count_with_bounds_overlap(bioc_seq *seq, char *sub, int64_t start, int64_t end) {
+int64_t bioc_count_with_overlap_bounded(bioc_seq *seq, char *sub, int64_t start, int64_t end) {
     return  bioc_count_common(seq, sub, start, end, true);
+}
+
+bool bioc_seq_starts_with_bounded(bioc_seq *seq, const char *prefix, int64_t start, int64_t end) {
+    //TODO: check bound properly
+    int64_t s = (int64_t) strlen(seq->nucleotides + start);
+
+    if(seq->nucleotides + start + s > seq->nucleotides + end) {
+        //TODO: check
+        return false;
+    }
+    return strncmp(prefix, seq->nucleotides + start, strlen(prefix)) == 0;
+}
+
+bool bioc_seq_starts_with(bioc_seq *seq, const char *prefix) {
+    return bioc_seq_starts_with_bounded(seq, prefix, 0, seq->len);
+}
+
+bool bioc_seq_ends_with_bounded(bioc_seq *seq, char* suffix, int64_t start, int64_t end) {
+    //TODO: check bound properly
+    int64_t seq_l = seq->len;
+    int64_t suffix_l = (int64_t)strlen(suffix);
+
+    if (seq_l < suffix_l) {
+        return false;
+    }
+
+    return strncmp(seq->nucleotides + start + (end - suffix_l), suffix, suffix_l) == 0;
+}
+
+bool bioc_seq_ends_with(bioc_seq *seq, char* suffix) {
+    return bioc_seq_ends_with_bounded(seq, suffix, 0, seq->len);
 }
 
 void bioc_seq_free(bioc_seq *seq) {
     arrfree(seq->nucleotides);
     free(seq);
+}
+
+
+static void make_table(bioc_translation_table_entry **table, bioc_genetic_code code) {
+
+    assert(*table);
+
+    static const char *base1 = "TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG";
+    static const char *base2 = "TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG";
+    static const char *base3 = "TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG";
+
+    const char * translation_data;
+
+    switch (code) {
+        case BIOC_STANDART:
+            translation_data = "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG";
+            break;
+        case BIOC_VERTEBRATE_MITOCHONDRIAL:
+            translation_data = "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS**VVVVAAAADDEEGGGG";
+            break;
+        case BIOC_INVERTEBRATE_MITOCHONDRIAL:
+            translation_data = "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSSSVVVVAAAADDEEGGGG";
+            break;
+    }
+
+    size_t l = 64;
+
+    for(size_t i = 0; i < l; i++) {
+        char *combination = calloc(4, 1);
+        combination[0] = base1[i];
+        combination[1] = base2[i];
+        combination[2] = base3[i];
+        combination[3] = '\0';
+        shput(*table, combination, translation_data[i]);
+
+        if(combination[0] == 'T') {
+            combination[0] = 'U';
+        }
+
+        if(combination[1] == 'T') {
+            combination[1] = 'U';
+        }
+
+        if(combination[2] == 'T') {
+            combination[2] = 'U';
+        }
+
+        shput(*table, combination, translation_data[i]);
+    }
+
+}
+
+bioc_seq * bioc_translate(bioc_seq *s, bioc_genetic_code code, bool to_stop) {
+
+    int64_t s_len = s->len;
+
+    if (s_len < 3) {
+        return seq(NULL);
+    }
+
+    static bioc_translation_table_entry *standard = NULL;
+    static bioc_translation_table_entry *vertebrate = NULL;
+    static bioc_translation_table_entry *invertebrate = NULL;
+
+    bioc_translation_table_entry *tab = NULL;
+
+    switch (code) {
+        case BIOC_STANDART:
+        {
+            if(standard == NULL) {
+                sh_new_strdup(standard);
+                shdefault(standard, '?');
+                make_table(&standard, code);
+            }
+            tab = standard;
+            break;
+        }
+        case BIOC_VERTEBRATE_MITOCHONDRIAL:
+        {
+            if(vertebrate == NULL) {
+                sh_new_strdup(vertebrate);
+                shdefault(standard, '?');
+                make_table(&vertebrate, code);
+            }
+            tab = vertebrate;
+            break;
+
+        }
+        case BIOC_INVERTEBRATE_MITOCHONDRIAL:
+        {
+            if(invertebrate == NULL) {
+                sh_new_strdup(invertebrate);
+                shdefault(standard, '?');
+                make_table(&invertebrate, code);
+            }
+            tab = invertebrate;
+            break;
+
+        }
+    }
+
+    int64_t rest = s_len % 3;
+    if(rest != 0) {
+        s_len -= rest;
+    }
+
+    bioc_seq *translated = seq(NULL);
+
+    int64_t i = 0;
+    while (i < s_len) {
+
+        char b[4] = {0,0,0,0}; //Do we need this?
+
+        b[0] = s->nucleotides[i];
+        b[1] = s->nucleotides[i + 1];
+        b[2] = s->nucleotides[i + 2];
+
+        i +=3;
+
+        char tr = shget(tab, b);
+
+        if(to_stop) {
+            if (tr == '*') {
+                break;
+            }
+        }
+
+        bioc_add_nucleotide(translated, tr);
+    }
+    arrput(translated->nucleotides, '\0');
+
+    return translated;
+}
+
+bioc_seq *bioc_concatenate(bioc_seq *s1, bioc_seq *s2) {
+
+    int64_t s1_l = s1->len;
+    int64_t s2_l = s2->len;
+
+    bioc_seq *concat = empty_seq_with_len(s1_l + s2_l);
+
+    //TODO: memcpy
+    for(int i = 0; i < s1_l; i++) {
+        concat->nucleotides[i] = s1->nucleotides[i];
+    }
+
+    for(int i = 0; i < s2_l; i++) {
+        concat->nucleotides[i + s1_l] = s2->nucleotides[i];
+    }
+
+    concat->nucleotides[s1_l + s2_l] = '\0';
+
+    return concat;
+
 }
